@@ -278,6 +278,9 @@ details.dir p{margin:6px 0 0;line-height:1.55;color:var(--muted)}
 .passos{margin:10px 0 0;padding-left:18px;color:var(--muted);line-height:1.5}
 .passos li{margin-bottom:4px}
 .passos b{color:var(--ink)}
+
+.legenda{display:flex;gap:16px;font-size:.82rem;color:var(--muted);margin-top:4px}
+.legenda i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
 </style>
 </head>
 <body>
@@ -320,7 +323,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
 <script>
 (function(){
 'use strict';
-var APP='rumo', VERSAO=3, LS='rumo_dados_v1', LS_TEMA='rumo_tema';
+var APP='rumo', VERSAO=4, LS='rumo_dados_v1', LS_TEMA='rumo_tema';
 
 
 /* ---------- utilidades ---------- */
@@ -404,6 +407,8 @@ var GLOSS={
   superendividamento:['Superendividamento','Quando as dívidas impedem pagar o básico para viver. A Lei 14.181/2021 permite renegociar com todos os credores juntos, preservando o mínimo existencial.'],
   chequeespecial:['Cheque especial','É o limite que o banco empresta quando o saldo da conta fica negativo. Os juros estão entre os mais caros do mercado, com teto legal de 8% ao mês. Saldo negativo é dívida, mesmo sem contrato separado.'],
   divisao:['Divisão das contas da casa','Proporcional: cada um contribui na proporção da sua renda (quem ganha 60% da renda do casal paga 60% da casa). Meio a meio: cada um paga metade. Tudo junto: toda a renda vai para um pote único.'],
+  evolucao:['Sua evolução','Todo mês o Rummo guarda um retrato automático: dívidas, reserva, patrimônio (o que você tem menos o que deve) e nota de saúde. O gráfico mostra o caminho mês a mês.'],
+  lembretes:['Lembretes na agenda','O Rummo cria um arquivo de agenda com avisos que se repetem sozinhos todo mês. Eles ficam no seu celular, não num servidor. Se mudar contas fixas, gere de novo.'],
   sequencia:['Sequência','Quantos dias seguidos, até hoje, têm carimbo. Um dia sem registro e sem confirmação zera a sequência.']
 };
 function gBtn(k){return '<button type="button" class="q" data-act="g|'+k+'" aria-label="O que é isso?">?</button>';}
@@ -516,16 +521,17 @@ var FIELDS={
   lancamentos:['data','tipo','descricao','categoria','valor','conta_id','conta_destino_id','titular','planejada','previsto_ref','grupo_parcela','dia_registro','nao_identificado'],
   conferencias:['data','conta_id','saldo_real','saldo_calculado','diferenca'],
   rendimentos:['investimento_id','competencia','saldo_anterior','saldo_novo','rendimento','data'],
-  carimbos:['data','hora','sem_movimento','revisado','lancamentos_n','pagos_n','conferencias_n','saldo','nota','alertas_n','resumo']
+  carimbos:['data','hora','sem_movimento','revisado','lancamentos_n','pagos_n','conferencias_n','saldo','nota','alertas_n','resumo'],
+  retratos:['comp','divida_total','reserva','ativos','patrimonio','nota','entradas','saidas','nao_planejado','atualizado']
 };
-var ABAS={contas:'Contas',receitas:'Receitas',despesas:'Despesas',dividas:'Dividas',investimentos:'Investimentos',metas:'Metas',lancamentos:'Lancamentos',conferencias:'Conferencias',rendimentos:'Rendimentos',carimbos:'Carimbos'};
+var ABAS={retratos:'Evolucao',contas:'Contas',receitas:'Receitas',despesas:'Despesas',dividas:'Dividas',investimentos:'Investimentos',metas:'Metas',lancamentos:'Lancamentos',conferencias:'Conferencias',rendimentos:'Rendimentos',carimbos:'Carimbos'};
 var COLS=Object.keys(FIELDS);
-var TYPES={money:['limite_cheque','gasto_variavel','colchao_minimo','minimo_existencial','valor_original','proposta_avista','proposta_entrada','proposta_valor_parcela','saldo_inicial','limite','valor','parcela','saldo_devedor','saldo','saldo_real','saldo_calculado','diferenca','saldo_anterior','saldo_novo','rendimento'],
+var TYPES={money:['divida_total','reserva','ativos','patrimonio','entradas','saidas','nao_planejado','limite_cheque','gasto_variavel','colchao_minimo','minimo_existencial','valor_original','proposta_avista','proposta_entrada','proposta_valor_parcela','saldo_inicial','limite','valor','parcela','saldo_devedor','saldo','saldo_real','saldo_calculado','diferenca','saldo_anterior','saldo_novo','rendimento'],
   int:['casal_dia','pct_livre','proposta_parcelas','meses_reserva','limite_cartao','limite_parcelas','dia_fechamento','dia_vencimento','dia','mes','parcelas_restantes','lancamentos_n','pagos_n','conferencias_n','nota','alertas_n'],
   num:['juros_mes','juros_cheque'],
-  bool:['nao_identificado','trilha_levantou','baixa_confirmada','variavel','assinatura','em_atraso','planejada','sem_movimento','revisado','excluido'],
-  date:['data','data_saldo','dia_registro','vencimento_original','quitada_em','pagamento_baixa_em'],
-  month:['desde','competencia_base','prazo','competencia','atualizado_comp']};
+  bool:['lembrete_diario','lembrete_venc','lembrete_fim','lembrete_receb','lembrete_detalhes','nao_identificado','trilha_levantou','baixa_confirmada','variavel','assinatura','em_atraso','planejada','sem_movimento','revisado','excluido'],
+  date:['atualizado','data','data_saldo','dia_registro','vencimento_original','quitada_em','pagamento_baixa_em'],
+  month:['comp','desde','competencia_base','prazo','competencia','atualizado_comp']};
 function tipoCampo(k){for(var t in TYPES){if(TYPES[t].indexOf(k)>-1)return t;}return 'text';}
 
 /* ---------- estado ---------- */
@@ -564,6 +570,7 @@ function excluirRec(col,id){var r=byId(col,id);if(r){r.excluido=true;r.atualizad
 function commit(msg){
   S.meta.ultima_alteracao=nowIso();
   carimbarHoje();
+  atualizarRetrato();
   persistir();render();
   if(msg)toast(msg);
 }
@@ -760,6 +767,7 @@ function dicaInstalar(){
 }
 function banners(){
   var out=dicaInstalar()+cardSaldos();
+  if(S.meta.onboarding_ok&&!S.meta.lembretes_em&&!S.meta.lembretes_dispensado&&UI.view==='painel')out+='<div class="banner"><span class="tx"><b>Quer ajuda para não esquecer?</b> O Rummo coloca na agenda do seu celular um lembrete diário e os vencimentos das contas.</span><button class="btn sm pri" data-act="go|dados">Configurar lembretes</button><button class="btn sm ghost" data-act="lemb-pular">Agora não</button></div>';
   if(!storageOk)out+='<div class="alert crit"><span class="bar"></span><span class="tx">Este navegador não está guardando os dados automaticamente. Exporte o Excel antes de fechar.</span><button class="btn sm" data-act="exportar">Exportar</button></div>';
   var semReg=diasSemRegistro().slice(-7);
   if(semReg.length){
@@ -807,6 +815,7 @@ function vPainel(){
     metric('Dívidas',brl(m.dividaTotal),m.dividas.length?plural(m.dividas.length,'dívida','dívidas'):'nenhuma cadastrada')+
     '</div>';
   h+='<div class="card"><h2>Linha do Rummo '+gBtn('alivio')+'</h2>'+linhaRumo()+'</div>';
+  h+=cardEvolucao();
   h+='<div class="cols"><div class="card"><h2>O que merece atenção</h2>'+(dg.it.length?dg.it.map(alertaHTML).join(''):'<div class="alert ok"><span class="bar"></span><span class="tx">Nenhum alerta agora. Continue registrando para manter assim.</span></div>')+
     (dg.it.some(function(i){return i.pen>0;})?'<details class="small muted" style="margin-top:6px"><summary style="cursor:pointer">Como a nota foi calculada</summary><ul class="facts-list" style="margin-top:6px"><li><span>Ponto de partida</span><span>100</span></li>'+dg.it.filter(function(i){return i.pen>0;}).map(function(i){return '<li><span>'+esc(i.tx.split('.')[0])+'</span><span>−'+i.pen+'</span></li>';}).join('')+'<li><b>Nota</b><b>'+dg.nota+'</b></li></ul></details>':'')+
     '</div><div class="card"><h2>Próximos 7 dias <button class="btn ghost sm r" data-act="nav|checklist">Checklist</button></h2>'+proximos(m)+'</div></div>';
@@ -975,6 +984,7 @@ function vDados(){
     '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri" data-act="exportar">Exportar Excel</button><button class="btn pri" data-act="importar">Importar Excel</button>'+(podeCompartilhar()?'<button class="btn" data-act="compartilhar">Compartilhar arquivo</button>':'')+'</div>'+'<ol class="passos small"><li><b>Exportar</b> salva uma cópia de tudo num arquivo Excel. Faça isso ao terminar de usar.</li><li><b>Importar</b> abre esse arquivo para continuar de onde parou, neste ou em outro aparelho.</li><li>Ao importar, escolha o arquivo mais recente que começa com <b>'+(ehCasal()?'rummo_casal_':'rummo_financas_')+'</b>. Nada do que já está aqui é apagado.</li></ol>'+
     '<p class="small muted" style="margin-bottom:0">'+plural(cont,'registro','registros')+' neste aparelho. '+(S.meta.ultima_exportacao?'Última exportação: '+new Date(S.meta.ultima_exportacao).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})+'.':'Ainda não exportado.')+'</p></div>'+
     '<div class="card"><h2>Privacidade</h2><p class="small" style="margin-top:0">Seus dados ficam só neste aparelho e nos arquivos que você exportar. O Rummo não envia nada para a internet. Quando aberto por um endereço da web, só o código do aplicativo vem de lá; seus dados nunca saem do aparelho.</p><p class="small muted" style="margin-bottom:0">O Rummo é uma ferramenta educativa de organização financeira. Ele não substitui a orientação de um profissional.</p></div></div>';
+  h+=cardLembretes();
   h+='<div class="card"><h2>Suas preferências</h2><form class="form" id="formPrem">'+
     (ehCasal()?fld('casal_nome_a','Nome da pessoa 1','text',P.casal_nome_a)+fld('casal_nome_b','Nome da pessoa 2','text',P.casal_nome_b)+fld('eu','Quem é você neste aparelho','select',lerEu()||'A',{opt:[['A',donoNome('A')],['B',donoNome('B')]],help:'Fica guardado só neste aparelho.'})+fld('casal_divisao','Divisão das contas da casa','select',P.casal_divisao||'proporcional',{opt:[['proporcional','Proporcional à renda'],['meio','Meio a meio'],['junto','Tudo junto']],g:'divisao'})+fld('casal_dia','Dia da contribuição','int',P.casal_dia):fld('nome','Como quer ser chamado','text',P.nome,{ph:'Seu nome'}))+
     fld('meses_reserva','Meta de reserva (meses de gastos essenciais)','int',P.meses_reserva,{g:'reserva'})+
@@ -1189,7 +1199,7 @@ function podeCompartilhar(){try{return !!(navigator.canShare&&navigator.canShare
 function montarWB(){
   var wb=XLSX.utils.book_new();
   var P=Object.assign({},S.premissas);
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet([P],{header:['id','nome','meses_reserva','limite_cartao','limite_parcelas','gasto_variavel','colchao_minimo','pct_livre','minimo_existencial','trilha_levantou','casal_nome_a','casal_nome_b','casal_divisao','casal_dia','categorias_despesa','categorias_receita','atualizado_em']}),'Premissas');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet([P],{header:['id','nome','meses_reserva','limite_cartao','limite_parcelas','gasto_variavel','colchao_minimo','pct_livre','minimo_existencial','trilha_levantou','casal_nome_a','casal_nome_b','casal_divisao','casal_dia','lembrete_diario','lembrete_hora','lembrete_venc','lembrete_fim','lembrete_receb','lembrete_detalhes','categorias_despesa','categorias_receita','atualizado_em']}),'Premissas');
   COLS.forEach(function(c){
     var hdr=FIELDS[c].concat(SYS);
     var rows=S[c].slice().sort(function(a,b){return (a.excluido?1:0)-(b.excluido?1:0);});
@@ -1263,7 +1273,7 @@ function mesclar(inc){
       var loc=S[c][i];
       if(igual(loc,imp)){res.iguais++;return;}
       var la=loc.atualizado_em||'',ia=imp.atualizado_em||'';
-      if(c==='carimbos'){if(ia>la)S[c][i]=imp;res.iguais++;return;}
+      if(c==='carimbos'||c==='retratos'){if(ia>la)S[c][i]=imp;res.iguais++;return;}
       if(base&&la>base&&ia>base){res.conflitos.push({c:c,i:i,loc:loc,imp:imp});return;}
       if(ia>la){S[c][i]=imp;res.atualizados++;}else res.iguais++;
     });
@@ -1869,7 +1879,7 @@ function modalEspacos(){
   var row=function(id,t,s,atual){return '<div class="row"><div class="main"><div class="t">'+t+'</div><div class="s">'+s+'</div></div>'+(atual?'<span class="pill ok">Aberto</span>':'<button class="btn sm pri" data-act="esp|'+id+'">'+(id==='casal'&&!casal?'Criar':'Abrir')+'</button>')+'</div>';};
   abrirModal({titulo:'Seus espaços',fechar:'Fechar',corpo:'<div class="full rows">'+
     row('principal','Meu Rummo','Individual. Só você vê, neste aparelho e nos arquivos que você exportar.',!ehCasal())+
-    row('casal','Rummo do casal',casal?'Compartilhado. Os dois veem tudo o que estiver aqui.':'Para cuidarem juntos: contas da casa, contribuição de cada um e o plano do casal.',ehCasal())+
+    row('casal','Rummo do casal <span class="pill warn">Prévia do Plus</span>',casal?'Compartilhado. Os dois veem tudo o que estiver aqui.':'Para cuidarem juntos: contas da casa, contribuição de cada um e o plano do casal.',ehCasal())+
     '</div><p class="full small muted" style="margin:6px 0 0">Os espaços guardam dados separados. O que for só seu, mantenha no Meu Rummo.</p>'});
 }
 function modalEu(){
@@ -1884,7 +1894,7 @@ function renderOnbCasal(){
   var p=ONBC.passo,P=S.premissas,h='<div class="onb"><div class="box"><div class="steps">'+[0,1,2].map(function(i){return '<i class="'+(i<=p?'on':'')+'"></i>';}).join('')+'</div>';
   if(p===0){
     h+='<h2>Cuidar do dinheiro a dois.</h2><p>O Rummo do casal mostra as contas da casa, quanto cada um contribui e o plano do casal, sem misturar o que é de cada um.</p>'+
-      '<div class="promise"><div><b>No Rummo do casal, os dois veem tudo o que estiver aqui.</b> O que for só seu, mantenha no Meu Rummo, que continua separado e privado.</div><div class="muted small">Para usar nos dois celulares, um exporta o Excel e envia para o outro, que importa. O Rummo junta as informações sem apagar nada.</div></div>'+
+      '<div class="promise"><div><b>No Rummo do casal, os dois veem tudo o que estiver aqui.</b> O que for só seu, mantenha no Meu Rummo, que continua separado e privado.</div><div class="small" style="margin-top:6px"><span class="pill warn">Prévia do Plus</span> Durante os testes, o modo casal é gratuito. No lançamento, ele fará parte do Rummo Plus.</div><div class="muted small">Para usar nos dois celulares, um exporta o Excel e envia para o outro, que importa. O Rummo junta as informações sem apagar nada.</div></div>'+
       '<div class="acts"><button class="btn pri" data-act="onbc|1">Criar o Rummo do casal</button><button class="btn" data-act="importar">Entrar com o arquivo do(a) parceiro(a)</button><button class="btn ghost" data-act="esp|principal">Voltar para Meu Rummo</button></div>';
   } else if(p===1){
     h+='<h2>Quem são vocês?</h2><form class="form" id="onbcForm" onsubmit="return false">'+
@@ -1903,6 +1913,135 @@ function renderOnbCasal(){
   $('#onb').innerHTML=h+'</div></div>';
 }
 
+/* =====================================================================
+   FASE 2.5 · Constância: lembretes na agenda + evolução mês a mês
+   ===================================================================== */
+
+/* ---------- retrato mensal ---------- */
+function retratoAtual(){
+  var vs=UI.visao;UI.visao='tudo';
+  try{
+    var dg=diagnostico(),m=dg.m;
+    var ativos=r2(sum(liveAll('contas').filter(function(c){return c.tipo!=='cartao';}),function(c){return Math.max(0,saldoConta(c));})+sum(liveAll('investimentos'),function(i){return i.saldo;}));
+    var passivos=r2(m.fatura+m.dividaTotal);
+    return {comp:m.c,divida_total:r2(m.dividaTotal),reserva:r2(m.reserva),ativos:ativos,patrimonio:r2(ativos-passivos),nota:m.temDados?dg.nota:'',
+      entradas:m.ent,saidas:m.sai,nao_planejado:m.naoPlan,atualizado:hoje()};
+  } finally {UI.visao=vs;}
+}
+function atualizarRetrato(){
+  if(!S.meta.onboarding_ok)return;
+  var r=retratoAtual(),id='M-'+r.comp,ex=byId('retratos',id);
+  if(!ex){ex={id:id,criado_em:nowIso()};S.retratos.push(ex);}
+  Object.assign(ex,r,{excluido:false,atualizado_em:nowIso()});
+}
+function fmtK(v){var a=Math.abs(v),s=v<0?'−':'';return a>=1000?s+'R$ '+(a/1000).toLocaleString('pt-BR',{maximumFractionDigits:1})+' mil':s+'R$ '+Math.round(a);}
+function graficoEvolucao(rs){
+  var W=640,H=210,P={l:64,r:16,t:14,b:30},series=[{k:'patrimonio',nome:'Patrimônio',cor:'var(--okbar)'},{k:'divida_total',nome:'Dívidas',cor:'var(--critbar)'}];
+  var vals=[0];rs.forEach(function(r){series.forEach(function(s){vals.push(Number(r[s.k])||0);});});
+  var mn=Math.min.apply(null,vals),mx=Math.max.apply(null,vals);if(mx===mn)mx=mn+1;
+  var x=function(i){return rs.length===1?(P.l+(W-P.l-P.r)/2):P.l+i*(W-P.l-P.r)/(rs.length-1);};
+  var y=function(v){return P.t+(mx-v)/(mx-mn)*(H-P.t-P.b);};
+  var g='';
+  [mx,(mx+mn)/2,mn].forEach(function(t){g+='<line x1="'+P.l+'" x2="'+(W-P.r)+'" y1="'+y(t)+'" y2="'+y(t)+'" stroke="var(--line)" stroke-width="1"/><text x="'+(P.l-8)+'" y="'+(y(t)+4)+'" text-anchor="end" font-size="11" fill="var(--muted)">'+fmtK(t)+'</text>';});
+  if(mn<0&&mx>0)g+='<line x1="'+P.l+'" x2="'+(W-P.r)+'" y1="'+y(0)+'" y2="'+y(0)+'" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3"/>';
+  rs.forEach(function(r,i){g+='<text x="'+x(i)+'" y="'+(H-8)+'" text-anchor="middle" font-size="11" fill="var(--muted)">'+compCurto(r.comp)+'</text>';});
+  series.forEach(function(s){
+    var pts=rs.map(function(r,i){return x(i)+','+y(Number(r[s.k])||0);}).join(' ');
+    if(rs.length>1)g+='<polyline points="'+pts+'" fill="none" stroke="'+s.cor+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+    rs.forEach(function(r,i){g+='<circle cx="'+x(i)+'" cy="'+y(Number(r[s.k])||0)+'" r="4" fill="'+s.cor+'"><title>'+s.nome+' em '+compLabel(r.comp)+': '+brl(r[s.k])+'</title></circle>';});
+  });
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Evolução do patrimônio e das dívidas por mês">'+g+'</svg>'+
+    '<div class="legenda">'+series.map(function(s){return '<span><i style="background:'+s.cor+'"></i>'+s.nome+'</span>';}).join('')+'</div>';
+}
+function cardEvolucao(){
+  var rs=liveAll('retratos').slice().sort(function(a,b){return a.comp<b.comp?-1:1;}).slice(-12);
+  if(!rs.length)return '';
+  var u=rs[rs.length-1],a=rs.length>1?rs[rs.length-2]:null,frases=[];
+  if(a){
+    var dd=r2(u.divida_total-a.divida_total),dp=r2(u.patrimonio-a.patrimonio);
+    if(dd<0)frases.push('As dívidas caíram <b>'+brl(-dd)+'</b> desde '+MESES[Number(a.comp.slice(5))-1]+'.');else if(dd>0)frases.push('As dívidas subiram '+brl(dd)+' desde '+MESES[Number(a.comp.slice(5))-1]+'.');
+    if(dp>0)frases.push('O patrimônio cresceu <b>'+brl(dp)+'</b>.');else if(dp<0)frases.push('O patrimônio recuou '+brl(-dp)+'.');
+    if(u.nota!==''&&a.nota!==''&&u.nota!==a.nota)frases.push('A nota de saúde foi de '+a.nota+' para <b>'+u.nota+'</b>.');
+  } else frases.push('Este é o seu primeiro mês. A partir do próximo, o gráfico mostra a comparação, mês a mês.');
+  return '<div class="card"><h2>Sua evolução '+gBtn('evolucao')+'</h2>'+graficoEvolucao(rs)+'<p class="small" style="margin:8px 0 0">'+frases.join(' ')+'</p></div>';
+}
+
+/* ---------- lembretes na agenda (.ics) ---------- */
+function icsEsc(s){return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n');}
+function icsDia(ds){return ds.replace(/-/g,'');}
+function regraMensal(d){d=Math.max(1,Math.min(31,Number(d)||1));return 'FREQ=MONTHLY;BYMONTHDAY='+(d===31?-1:d);}
+function proximaData(dia){var h=hoje(),d=dateInComp(compAtual(),dia);return d>=h?d:dateInComp(addMonths(compAtual(),1),dia);}
+function gerarICS(){
+  var P=S.premissas,det=!!P.lembrete_detalhes,L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Rummo//Lembretes//PT-BR','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:Rummo'];
+  var stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+Z$/,'Z'),n=0;
+  var eu=lerEu(),meu=function(col,r){return !ehCasal()||!eu||donoRec(col,r)===eu||donoRec(col,r)==='casa';};
+  function ev(uid,o){
+    n++;L.push('BEGIN:VEVENT','UID:'+uid+'@rummo','DTSTAMP:'+stamp);
+    if(o.hora){L.push('DTSTART:'+icsDia(o.data)+'T'+o.hora.replace(':','')+'00','DURATION:PT10M');}
+    else L.push('DTSTART;VALUE=DATE:'+icsDia(o.data),'DTEND;VALUE=DATE:'+icsDia(addDays(o.data,1)));
+    if(o.rrule)L.push('RRULE:'+o.rrule);
+    L.push('SUMMARY:'+icsEsc(o.titulo));
+    L.push('DESCRIPTION:'+icsEsc((o.desc?o.desc+'\n':'')+'Abra o Rummo para registrar.'));
+    (o.hora?['PT0M']:['-PT15H','PT9H']).forEach(function(t){L.push('BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsEsc(o.titulo),'TRIGGER:'+t,'END:VALARM');});
+    L.push('END:VEVENT');
+  }
+  if(P.lembrete_diario!==false)ev('diario',{data:hoje(),hora:/^\d{2}:\d{2}$/.test(P.lembrete_hora||'')?P.lembrete_hora:'20:00',rrule:'FREQ=DAILY',titulo:'Rummo: registre o dia',desc:'Lance o que entrou e o que saiu hoje. Leva um minuto.'});
+  if(P.lembrete_fim!==false)ev('fim-do-mes',{data:dateInComp(compAtual(),31),rrule:'FREQ=MONTHLY;BYMONTHDAY=-1',titulo:'Rummo: feche o mês',desc:'Confira o checklist, atualize os investimentos e exporte o Excel.'});
+  if(P.lembrete_venc!==false){
+    liveAll('despesas').filter(function(d){return meu('despesas',d)&&Number(d.dia)>0;}).forEach(function(d){
+      var anual=d.frequencia==='anual';
+      ev('desp-'+d.id,{data:anual?(function(){var y=Number(hoje().slice(0,4)),c=y+'-'+pad(Number(d.mes)||1),dt=dateInComp(c,d.dia);return dt>=hoje()?dt:dateInComp((y+1)+'-'+pad(Number(d.mes)||1),d.dia);})():proximaData(d.dia),
+        rrule:anual?'FREQ=YEARLY;BYMONTH='+(Number(d.mes)||1)+';BYMONTHDAY='+Math.min(28,Number(d.dia)||1):regraMensal(d.dia),
+        titulo:det?'Rummo: vence '+d.descricao+' ('+brl(d.valor)+')':'Rummo: conta a vencer hoje'});
+    });
+    liveAll('dividas').filter(function(d){return meu('dividas',d)&&dividaAtiva(d)&&!isNeg(d)&&Number(d.dia_vencimento)>0;}).forEach(function(d){
+      var inf=infoDivida(d),rule=regraMensal(d.dia_vencimento),ini=proximaData(d.dia_vencimento);
+      if(inf.fim){var rest=0;for(var c=compOf(ini);c<=inf.fim;c=addMonths(c,1))rest++;if(rest<1)return;rule+=';COUNT='+rest;}
+      ev('div-'+d.id,{data:ini,rrule:rule,titulo:det?'Rummo: parcela '+d.credor+' ('+brl(d.parcela)+')':'Rummo: parcela de dívida vence hoje',desc:det&&inf.fim?'Última parcela em '+compLabel(inf.fim)+'.':''});
+    });
+    liveAll('contas').filter(function(c){return meu('contas',c)&&c.tipo==='cartao'&&Number(c.dia_vencimento)>0;}).forEach(function(c){
+      ev('fat-'+c.id,{data:proximaData(c.dia_vencimento),rrule:regraMensal(c.dia_vencimento),titulo:det?'Rummo: fatura '+c.nome+' vence hoje':'Rummo: fatura do cartão vence hoje'});
+    });
+    pendenciasBaixa().filter(function(x){return !x.atrasada&&meu('dividas',x.d);}).forEach(function(x){
+      ev('baixa-'+x.d.id,{data:x.prazo,titulo:'Rummo: confirme se seu nome saiu',desc:'Prazo de 5 dias úteis para o credor pedir a baixa.'});
+    });
+    if(ehCasal()&&eu){var ct=contribCasal(compAtual());if(ct&&ct.modo!=='junto'&&ct.contaCasa)ev('contrib-'+eu,{data:proximaData(P.casal_dia||5),rrule:regraMensal(P.casal_dia||5),titulo:'Rummo: sua contribuição para a casa',desc:det?'Valor deste mês: '+brl(eu==='A'?ct.a:ct.b)+'.':''});}
+  }
+  if(P.lembrete_receb){
+    liveAll('receitas').filter(function(r){return meu('receitas',r)&&Number(r.dia)>0&&r.frequencia!=='anual';}).forEach(function(r){
+      ev('rec-'+r.id,{data:proximaData(r.dia),rrule:regraMensal(r.dia),titulo:det?'Rummo: dia de receber '+r.descricao:'Rummo: confira um recebimento'});
+    });
+  }
+  L.push('END:VCALENDAR');
+  return {txt:L.join('\r\n')+'\r\n',n:n};
+}
+function baixarLembretes(){
+  var r=gerarICS(),nome=(ehCasal()?'rummo_casal_':'rummo_')+'lembretes.ics';
+  var marcar=function(){S.meta.lembretes_em=nowIso();persistir();render();};
+  try{
+    var f=new File([r.txt],nome,{type:'text/calendar'});
+    if(IOS&&navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:nome}).then(function(){marcar();toast('Salve em Arquivos e toque no arquivo para adicionar à agenda.');}).catch(function(){});return;}
+    var url=URL.createObjectURL(new Blob([r.txt],{type:'text/calendar'})),a=document.createElement('a');
+    a.href=url;a.download=nome;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(url);a.remove();},1000);
+    marcar();toast(plural(r.n,'lembrete gerado','lembretes gerados')+'. Abra o arquivo para adicionar à agenda.');
+  }catch(e){toast('Não consegui gerar os lembretes: '+e.message);}
+}
+function cardLembretes(){
+  var P=S.premissas;
+  return '<div class="card" id="lembretes"><h2>Lembretes na agenda do celular '+gBtn('lembretes')+'</h2>'+
+    '<p class="small muted" style="margin-top:0">O Rummo gera um arquivo que coloca os avisos direto na agenda do seu celular, sem precisar de internet nem de cadastro.</p>'+
+    '<form class="form" id="formLemb" onsubmit="return false">'+
+      fld('lembrete_diario','Lembrete diário para registrar o dia','bool',P.lembrete_diario!==false)+
+      fld('lembrete_hora','Horário do lembrete diário','text',P.lembrete_hora||'20:00',{ph:'20:00'})+
+      fld('lembrete_venc','Vencimentos, parcelas e faturas','bool',P.lembrete_venc!==false)+
+      fld('lembrete_fim','Fechamento no fim do mês','bool',P.lembrete_fim!==false)+
+      fld('lembrete_receb','Dias de receber','bool',!!P.lembrete_receb)+
+      fld('lembrete_detalhes','Mostrar nomes e valores nos avisos','bool',!!P.lembrete_detalhes,{full:1,help:'Desligado por padrão: a agenda do celular costuma ser copiada para a conta Google ou Apple. Sem detalhes, o aviso diz só "conta a vencer hoje".'})+
+    '</form><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn pri" data-act="gerar-lembretes">Gerar lembretes</button></div>'+
+    (S.meta.lembretes_em?'<p class="small muted" style="margin:8px 0 0">Gerados em '+new Date(S.meta.lembretes_em).toLocaleDateString('pt-BR')+'. Mudou contas fixas ou dívidas? Gere de novo e apague os antigos da agenda.</p>':'')+
+    '<details class="dir" style="margin-top:8px"><summary>Como adicionar à agenda</summary><p class="small"><b>iPhone:</b> salve o arquivo em Arquivos, toque nele e escolha "Adicionar tudo". Dica: crie antes uma agenda chamada Rummo, para apagar e trocar os lembretes com facilidade.<br><b>Android:</b> abra o arquivo com o app de agenda do celular. Se o Google Agenda não abrir direto, importe pelo computador em calendar.google.com › Configurações › Importar.<br><b>Computador:</b> dê dois cliques no arquivo ou importe na sua agenda.</p></details></div>';
+}
+
 /* ---------- ações ---------- */
 var ACT={
   nav:function(v){UI.view=v;render();window.scrollTo(0,0);},
@@ -1917,6 +2056,8 @@ var ACT={
   semmov:function(d){var id='C-'+d;S.carimbos=S.carimbos.filter(function(x){return x.id!==id;});S.carimbos.push({id:id,data:d,hora:'',sem_movimento:true,revisado:true,resumo:'Confirmado: sem movimento',registrado_em:hoje(),criado_em:nowIso(),atualizado_em:nowIso(),excluido:false});commit('Dia '+dataBR(d)+' confirmado sem movimento');},
   'lancar-dia':function(d){modalLanc({data:d});},
   checkin:function(){commit('Carimbo de hoje registrado');},
+  'gerar-lembretes':function(){var f=$('#formLemb');if(f){var v=lerForm(f,{lembrete_hora:'text'});if(v.lembrete_hora&&!/^\d{1,2}:\d{2}$/.test(v.lembrete_hora)){erro(f,'lembrete_hora','Use o formato 20:00.');return;}if(v.lembrete_hora&&v.lembrete_hora.length===4)v.lembrete_hora='0'+v.lembrete_hora;Object.assign(S.premissas,v,{atualizado_em:nowIso()});persistir();}baixarLembretes();},
+  'lemb-pular':function(){S.meta.lembretes_dispensado=true;persistir();render();},
   espacos:function(){modalEspacos();},
   esp:function(id){trocarEspaco(id);},
   visao:function(v){UI.visao=v;render();},
@@ -2001,6 +2142,7 @@ carregar();
 render();
 if(!S.meta.onboarding_ok){if(ehCasal())renderOnbCasal();else renderOnb();}
 else if(ehCasal()&&!lerEu())modalEu();
+if(S.meta.onboarding_ok){atualizarRetrato();persistir();}
 if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(function(){});}
 window.__rumo={S:function(){return S;},mesclar:mesclar,montarWB:montarWB,normalizar:normalizar,diagnostico:diagnostico,itensDoMes:itensDoMes,saldoConta:saldoConta,commit:commit,salvarRec:salvarRec,ACT:ACT,lerArquivo:lerArquivo};
 })();
