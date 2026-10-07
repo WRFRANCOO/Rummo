@@ -350,8 +350,8 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
 <script>
 (function(){
 'use strict';
-var VERSAO_ID='2026.10.07-4';
-var VERSAO_APP='07/10/2026 · aviso de atualização';
+var VERSAO_ID='2026.10.07-5';
+var VERSAO_APP='07/10/2026 · status da versão';
 var APP='rumo', VERSAO=5, LS='rumo_dados_v1', LS_TEMA='rumo_tema';
 
 
@@ -1037,7 +1037,7 @@ function vDados(){
     '<p class="small muted" style="margin-top:0">O Excel exportado é a sua cópia completa. Para continuar em outro aparelho, importe o arquivo lá. O Rummo junta as informações sem apagar o que já existe.</p>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri" data-act="exportar">Exportar Excel</button><button class="btn pri" data-act="importar">Importar Excel</button>'+(podeCompartilhar()?'<button class="btn" data-act="compartilhar">Compartilhar arquivo</button>':'')+'</div>'+'<ol class="passos small"><li><b>Exportar</b> salva uma cópia de tudo num arquivo Excel. Faça isso ao terminar de usar.</li><li><b>Importar</b> abre esse arquivo para continuar de onde parou, neste ou em outro aparelho.</li><li>Ao importar, escolha o arquivo mais recente que começa com <b>'+(ehCasal()?'rummo_casal_':'rummo_financas_')+'</b>. Nada do que já está aqui é apagado.</li></ol>'+
     '<p class="small muted" style="margin-bottom:0">'+plural(cont,'registro','registros')+' neste aparelho. '+(S.meta.ultima_exportacao?'Última exportação: '+new Date(S.meta.ultima_exportacao).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})+'.':'Ainda não exportado.')+'</p></div>'+
-    '<div class="card"><h2>Privacidade</h2><p class="small" style="margin-top:0">Seus dados ficam só neste aparelho e nos arquivos que você exportar. O Rummo não envia nada para a internet. Quando aberto por um endereço da web, só o código do aplicativo vem de lá; seus dados nunca saem do aparelho.</p><p class="small muted" style="margin-bottom:0">O Rummo é uma ferramenta educativa de organização financeira. Ele não substitui a orientação de um profissional.</p><p class="small muted" style="margin:8px 0 0">Versão do app: <b>'+VERSAO_APP+'</b></p></div></div>';
+    '<div class="card"><h2>Privacidade</h2><p class="small" style="margin-top:0">Seus dados ficam só neste aparelho e nos arquivos que você exportar. O Rummo não envia nada para a internet. Quando aberto por um endereço da web, só o código do aplicativo vem de lá; seus dados nunca saem do aparelho.</p><p class="small muted" style="margin-bottom:0">O Rummo é uma ferramenta educativa de organização financeira. Ele não substitui a orientação de um profissional.</p>'+statusVersao()+'</div></div>';
   h+=cardLembretes();
   h+='<div class="card"><h2>Suas preferências</h2><form class="form" id="formPrem">'+
     (ehCasal()?fld('casal_nome_a','Nome da pessoa 1','text',P.casal_nome_a)+fld('casal_nome_b','Nome da pessoa 2','text',P.casal_nome_b)+fld('eu','Quem é você neste aparelho','select',lerEu()||'A',{opt:[['A',donoNome('A')],['B',donoNome('B')]],help:'Fica guardado só neste aparelho.'})+fld('casal_divisao','Divisão das contas da casa','select',P.casal_divisao||'proporcional',{opt:[['proporcional','Proporcional à renda'],['meio','Meio a meio'],['junto','Tudo junto']],g:'divisao'})+fld('casal_dia','Dia da contribuição','int',P.casal_dia):fld('nome','Como quer ser chamado','text',P.nome,{ph:'Seu nome'}))+
@@ -1058,7 +1058,7 @@ function vDados(){
 function vMais(){
   return '<div class="rows" style="margin-bottom:12px"><div class="row click" data-act="exportar"><div class="main"><div class="t">Exportar Excel</div><div class="s">Salvar uma cópia de tudo</div></div><span class="muted">›</span></div><div class="row click" data-act="importar"><div class="main"><div class="t">Importar Excel</div><div class="s">Abrir a última planilha e continuar de onde parou</div></div><span class="muted">›</span></div></div><div class="rows" style="margin-bottom:12px"><div class="row click" data-act="espacos"><div class="main"><div class="t">'+nomeEspaco()+'</div><div class="s">Trocar entre Meu Rummo e Rummo do casal</div></div><span class="muted">›</span></div></div><div class="rows">'+[['conselho','Conselho do mês','O que fazer este mês e o destino de cada real'],['dividas','Dívidas e nome limpo','Estratégia de pagamento e trilha para limpar o nome'],['diagnostico','Último diagnóstico','Carimbo do dia, sequência e histórico'],['cadastro','Cadastro','Contas, receitas, despesas, dívidas, investimentos e metas'],['dados','Dados e ajustes','Exportar, importar, preferências e privacidade']].map(function(o){
     return '<div class="row click" data-act="nav|'+o[0]+'"><div class="main"><div class="t">'+o[1]+'</div><div class="s">'+o[2]+'</div></div><span class="muted">›</span></div>';
-  }).join('')+'</div><p class="small muted" style="margin:14px 2px 0">Versão do app: <b>'+VERSAO_APP+'</b></p>';
+  }).join('')+'</div><div style="margin-top:14px">'+statusVersao()+'</div>';
 }
 
 /* ---------- formulários ---------- */
@@ -2201,6 +2201,7 @@ var ACT={
   'lancar-dia':function(d){modalLanc({data:d});},
   checkin:function(){commit('Carimbo de hoje registrado');},
   'atualizar-app':function(){toast('Atualizando…');atualizarApp();},
+  'verificar-versao':function(){verificarAtualizacao(true);},
   'gerar-lembretes':function(){var f=$('#formLemb');if(f){var v=lerForm(f,{lembrete_hora:'text'});if(v.lembrete_hora&&!/^\d{1,2}:\d{2}$/.test(v.lembrete_hora)){erro(f,'lembrete_hora','Use o formato 20:00.');return;}if(v.lembrete_hora&&v.lembrete_hora.length===4)v.lembrete_hora='0'+v.lembrete_hora;Object.assign(S.premissas,v,{atualizado_em:nowIso()});persistir();}baixarLembretes();},
   'lemb-pular':function(){S.meta.lembretes_dispensado=true;persistir();render();},
   espacos:function(){modalEspacos();},
@@ -2290,11 +2291,23 @@ else if(ehCasal()&&!lerEu())modalEu();
 if(S.meta.onboarding_ok){atualizarRetrato();persistir();}
 var HOSPEDADO=location.protocol==='https:'||location.hostname==='localhost';
 if('serviceWorker' in navigator&&HOSPEDADO){navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(reg){reg.update();}).catch(function(){});}
-function verificarAtualizacao(){
-  if(!HOSPEDADO||!window.fetch)return;
+function verificarAtualizacao(manual){
+  if(!HOSPEDADO||!window.fetch){UI.versaoStatus='local';if(manual)render();return;}
+  UI.versaoStatus='verificando';if(manual)render();
   fetch('versao.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
-    if(j&&j.versao&&j.versao!==VERSAO_ID&&(!UI.novaVersao||UI.novaVersao.versao!==j.versao)){UI.novaVersao=j;render();}
-  }).catch(function(){});
+    UI.versaoHora=agoraHora();
+    if(j&&j.versao&&j.versao!==VERSAO_ID){UI.novaVersao=j;UI.versaoStatus='nova';}
+    else{UI.novaVersao=null;UI.versaoStatus=j?'ok':'erro';}
+    render();if(manual&&UI.versaoStatus==='ok')toast('Seu Rummo está atualizado.');
+  }).catch(function(){UI.versaoStatus='offline';render();});
+}
+function statusVersao(){
+  var st=UI.versaoStatus,b='<b>'+VERSAO_APP+'</b>',btn='<button class="btn sm" data-act="verificar-versao">Verificar agora</button>';
+  if(st==='ok')return '<div class="alert ok" style="margin:8px 0 0"><span class="bar"></span><span class="tx">✓ Seu Rummo está atualizado. Versão '+b+(UI.versaoHora?' · verificado às '+UI.versaoHora:'')+'.</span>'+btn+'</div>';
+  if(st==='nova')return '<div class="alert warn" style="margin:8px 0 0"><span class="bar"></span><span class="tx">Existe uma versão nova. Você está na versão '+b+'.</span><button class="btn sm pri" data-act="atualizar-app">Atualizar agora</button></div>';
+  if(st==='offline'||st==='erro')return '<div class="alert info" style="margin:8px 0 0"><span class="bar"></span><span class="tx">Versão '+b+'. Sem internet para verificar atualizações agora.</span>'+btn+'</div>';
+  if(st==='local')return '<div class="alert info" style="margin:8px 0 0"><span class="bar"></span><span class="tx">Versão '+b+'. Aberto como arquivo: atualizações não são automáticas. Para receber as novidades sozinho, use o link do Rummo.</span></div>';
+  return '<div class="alert info" style="margin:8px 0 0"><span class="bar"></span><span class="tx">Versão '+b+'. Verificando atualizações…</span></div>';
 }
 function atualizarApp(){
   persistir();
