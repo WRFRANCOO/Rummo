@@ -116,7 +116,7 @@ main{padding:calc(20px + env(safe-area-inset-top,0px)) 28px calc(40px + env(safe
 .stop::after{content:"";position:absolute;top:2px;left:0;width:14px;height:14px;border-radius:50%;background:var(--card);border:3px solid var(--action)}
 .stop.now::after{background:var(--action)}
 .stop.meta::after{border-color:var(--warnbar)}
-.stop .m{font-weight:650;font-size:.92rem;text-transform:capitalize}
+.stop .m{font-weight:650;font-size:.92rem}
 .stop .d{font-size:.84rem;color:var(--muted);line-height:1.35}
 .stop .v{font-size:.86rem;color:var(--ok);font-weight:600}
 
@@ -147,7 +147,8 @@ main{padding:calc(20px + env(safe-area-inset-top,0px)) 28px calc(40px + env(safe
 .seg button{border:0;background:none;padding:6px 12px;border-radius:7px;cursor:pointer;color:var(--muted);font-weight:550;font-size:.88rem}
 .seg button[aria-pressed="true"]{background:var(--card);color:var(--brand);box-shadow:0 0 0 1px var(--line)}
 .monthnav{display:flex;align-items:center;gap:6px}
-.monthnav .lb{min-width:150px;text-align:center;font-weight:600;text-transform:capitalize}
+.monthnav .lb{min-width:150px;text-align:center;font-weight:600;display:inline-block}
+.monthnav .lb::first-letter,.stop .m::first-letter{text-transform:uppercase}
 
 /* Lists */
 .rows{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
@@ -160,7 +161,8 @@ main{padding:calc(20px + env(safe-area-inset-top,0px)) 28px calc(40px + env(safe
 .row .s{font-size:.82rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .row .val{font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap}
 .row.faded{opacity:.55}
-.dayhead{font-size:.8rem;color:var(--muted);padding:10px 2px 6px;font-weight:600;text-transform:capitalize}
+.dayhead{font-size:.8rem;color:var(--muted);padding:10px 2px 6px;font-weight:600}
+.dayhead::first-letter{text-transform:uppercase}
 .pill{font-size:.74rem;font-weight:650;padding:2px 9px;border-radius:999px;white-space:nowrap}
 .pill.ok{background:var(--okbg);color:var(--ok)} .pill.warn{background:var(--warnbg);color:var(--warn)}
 .pill.crit{background:var(--critbg);color:var(--crit)} .pill.info{background:var(--soft);color:var(--muted)}
@@ -281,6 +283,31 @@ details.dir p{margin:6px 0 0;line-height:1.55;color:var(--muted)}
 
 .legenda{display:flex;gap:16px;font-size:.82rem;color:var(--muted);margin-top:4px}
 .legenda i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+
+/* Saldos nos lançamentos */
+.saldos-faixa{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;margin-bottom:6px;scroll-snap-type:x proximity}
+.sconta{flex:0 0 auto;min-width:150px;max-width:220px;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:10px 12px;cursor:pointer;display:grid;gap:2px;scroll-snap-align:start}
+.sconta:hover{border-color:var(--action)}
+.sconta .n{font-size:.82rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sconta .v{font-size:1.15rem;font-weight:650}
+.sconta .s{font-size:.74rem;color:var(--muted)}
+.facts-list.prev{background:var(--soft);border-radius:10px;padding:6px 10px}
+/* Celular: nada passa da largura da tela */
+main{min-width:0}
+.topbar{flex-wrap:wrap}
+@media (max-width:860px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .topbar .acts{width:100%}
+  .seg{flex-wrap:wrap}
+  .monthnav .lb{min-width:0;flex:1}
+  .row{flex-wrap:wrap}
+  .row .main{flex:1 1 150px}
+  .hero{padding:18px}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .metric{padding:10px 12px}
+  .metric .v{font-size:1.1rem}
+  .seg button{padding:6px 10px}
+}
 </style>
 </head>
 <body>
@@ -323,7 +350,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
 <script>
 (function(){
 'use strict';
-var APP='rumo', VERSAO=4, LS='rumo_dados_v1', LS_TEMA='rumo_tema';
+var APP='rumo', VERSAO=5, LS='rumo_dados_v1', LS_TEMA='rumo_tema';
 
 
 /* ---------- utilidades ---------- */
@@ -409,6 +436,7 @@ var GLOSS={
   divisao:['Divisão das contas da casa','Proporcional: cada um contribui na proporção da sua renda (quem ganha 60% da renda do casal paga 60% da casa). Meio a meio: cada um paga metade. Tudo junto: toda a renda vai para um pote único.'],
   evolucao:['Sua evolução','Todo mês o Rummo guarda um retrato automático: dívidas, reserva, patrimônio (o que você tem menos o que deve) e nota de saúde. O gráfico mostra o caminho mês a mês.'],
   lembretes:['Lembretes na agenda','O Rummo cria um arquivo de agenda com avisos que se repetem sozinhos todo mês. Eles ficam no seu celular, não num servidor. Se mudar contas fixas, gere de novo.'],
+  cartao:['Ciclo do cartão','Cada compra entra na fatura aberta. No dia de fechamento, a fatura fecha e passa para as contas a pagar, com data no vencimento. Compras feitas a partir do fechamento vão para a fatura seguinte. Compras parceladas ocupam o limite até a última parcela.'],
   sequencia:['Sequência','Quantos dias seguidos, até hoje, têm carimbo. Um dia sem registro e sem confirmação zera a sequência.']
 };
 function gBtn(k){return '<button type="button" class="q" data-act="g|'+k+'" aria-label="O que é isso?">?</button>';}
@@ -428,13 +456,15 @@ var SCHEMA={
   contas:{t:'Contas',sing:'conta',pref:'CT',fields:[
     {k:'nome',l:'Nome',t:'text',req:1,ph:'Nubank, Caixa, Carteira'},
     {k:'tipo',l:'Tipo',t:'select',opt:function(){return optsObj(TIPO_CONTA);}},
-    {k:'saldo_inicial',l:'Saldo hoje',t:'money',help:'O que o banco mostra agora. Depois disso, o Rummo calcula sozinho a partir dos lançamentos.',lab:function(r){return r.tipo==='cartao'?'Fatura em aberto hoje':'Saldo hoje';}},
+    {k:'saldo_inicial',l:'Saldo hoje',t:'money',help:'O que o banco mostra agora. Depois disso, o Rummo calcula sozinho a partir dos lançamentos.',lab:function(r){return r.tipo==='cartao'?'Compras já feitas na fatura aberta':'Saldo hoje';}},
+    {k:'data_saldo',l:'Esse saldo é do dia',t:'date',help:'O dia em que o banco mostrava esse valor. Lançamentos a partir dessa data mexem no saldo.'},
     {k:'negativo',l:'Estou no negativo (usando o limite da conta)',t:'bool',show:function(r){return r.tipo==='corrente';},g:'chequeespecial'},
     {k:'limite_cheque',l:'Limite do cheque especial',t:'money',show:function(r){return r.tipo==='corrente';},help:'Opcional. O limite que o banco libera além do seu saldo.'},
     {k:'juros_cheque',l:'Juros do cheque especial ao mês (%)',t:'num',ph:'8',show:function(r){return r.tipo==='corrente';},help:'Veja no aplicativo do banco. Em branco, o Rummo usa 8%, o teto legal, como estimativa.'},
     {k:'limite',l:'Limite do cartão',t:'money',show:function(r){return r.tipo==='cartao';}},
-    {k:'dia_fechamento',l:'Dia de fechamento',t:'int',show:function(r){return r.tipo==='cartao';}},
-    {k:'dia_vencimento',l:'Dia de vencimento',t:'int',show:function(r){return r.tipo==='cartao';}},
+    {k:'dia_vencimento',l:'Dia de vencimento da fatura',t:'int',show:function(r){return r.tipo==='cartao';}},
+    {k:'dia_fechamento',l:'Dia de fechamento da fatura',t:'int',show:function(r){return r.tipo==='cartao';},g:'cartao',help:'Em branco, o Rummo considera 5 dias antes do vencimento. Compras a partir desse dia vão para a fatura seguinte.'},
+    {k:'fatura_fechada',l:'Fatura já fechada, esperando pagamento',t:'money',show:function(r){return r.tipo==='cartao';},help:'Se a fatura já fechou e ainda não venceu. Ela vai direto para as contas a pagar.'},
     {k:'de_quem',l:'De quem é',t:'select',opt:optsDono,show:function(){return ehCasal();}}
   ]},
   receitas:{t:'Receitas fixas',sing:'receita',pref:'RC',fields:[
@@ -512,7 +542,7 @@ var DEFAULTS={
 /* Campos por aba do Excel (ordem das colunas) */
 var SYS=['id','criado_em','atualizado_em','excluido'];
 var FIELDS={
-  contas:['de_quem','nome','tipo','saldo_inicial','data_saldo','saldo_definido_em','limite_cheque','juros_cheque','limite','dia_fechamento','dia_vencimento','titular'],
+  contas:['de_quem','nome','tipo','saldo_inicial','data_saldo','saldo_definido_em','limite_cheque','juros_cheque','limite','fatura_fechada','dia_fechamento','dia_vencimento','titular'],
   receitas:['de_quem','descricao','categoria','valor','frequencia','dia','mes','conta_id','variavel','titular'],
   despesas:['de_quem','descricao','categoria','valor','frequencia','dia','mes','conta_id','classificacao','impacto_corte','assinatura','desde','titular'],
   dividas:['de_quem','credor','tipo','parcela','parcelas_restantes','competencia_base','dia_vencimento','juros_mes','saldo_devedor','conta_id','em_atraso','valor_original','vencimento_original','onde','proposta_avista','proposta_entrada','proposta_parcelas','proposta_valor_parcela','quitada_em','pagamento_baixa_em','baixa_confirmada','tipo_original'],
@@ -526,7 +556,7 @@ var FIELDS={
 };
 var ABAS={retratos:'Evolucao',contas:'Contas',receitas:'Receitas',despesas:'Despesas',dividas:'Dividas',investimentos:'Investimentos',metas:'Metas',lancamentos:'Lancamentos',conferencias:'Conferencias',rendimentos:'Rendimentos',carimbos:'Carimbos'};
 var COLS=Object.keys(FIELDS);
-var TYPES={money:['divida_total','reserva','ativos','patrimonio','entradas','saidas','nao_planejado','limite_cheque','gasto_variavel','colchao_minimo','minimo_existencial','valor_original','proposta_avista','proposta_entrada','proposta_valor_parcela','saldo_inicial','limite','valor','parcela','saldo_devedor','saldo','saldo_real','saldo_calculado','diferenca','saldo_anterior','saldo_novo','rendimento'],
+var TYPES={money:['fatura_fechada','divida_total','reserva','ativos','patrimonio','entradas','saidas','nao_planejado','limite_cheque','gasto_variavel','colchao_minimo','minimo_existencial','valor_original','proposta_avista','proposta_entrada','proposta_valor_parcela','saldo_inicial','limite','valor','parcela','saldo_devedor','saldo','saldo_real','saldo_calculado','diferenca','saldo_anterior','saldo_novo','rendimento'],
   int:['casal_dia','pct_livre','proposta_parcelas','meses_reserva','limite_cartao','limite_parcelas','dia_fechamento','dia_vencimento','dia','mes','parcelas_restantes','lancamentos_n','pagos_n','conferencias_n','nota','alertas_n'],
   num:['juros_mes','juros_cheque'],
   bool:['lembrete_diario','lembrete_venc','lembrete_fim','lembrete_receb','lembrete_detalhes','nao_identificado','trilha_levantou','baixa_confirmada','variavel','assinatura','em_atraso','planejada','sem_movimento','revisado','excluido'],
@@ -625,8 +655,10 @@ function itensDoMes(c){
   });
   live('contas').forEach(function(ct){
     if(ct.tipo!=='cartao'||!ct.dia_vencimento)return;
-    var uso=Math.max(0,-saldoConta(ct));
-    it.push({ref:'F:'+ct.id+':'+c,tipo:'transferencia',desc:'Fatura '+ct.nome,categoria:'',valor:c>=compAtual()?uso:0,data:dateInComp(c,ct.dia_vencimento),conta_id:'',conta_destino_id:ct.id,origem:'Fatura do cartão'});
+    faturasCartao(ct).forEach(function(f){
+      if(compOf(f.venc)!==c||f.status==='zerada')return;
+      it.push({ref:'F:'+ct.id+':'+f.id,tipo:'transferencia',desc:'Fatura '+ct.nome,categoria:'',valor:f.status==='paga'?f.total:f.restante,data:f.venc,conta_id:'',conta_destino_id:ct.id,origem:'Fatura do cartão',fat:f});
+    });
   });
   it=it.concat(itensContribuicao(c));
   var h=hoje();
@@ -638,6 +670,7 @@ function itensDoMes(c){
     else if(daysDiff(h,i.data)<=3)i.status='breve';
     else i.status='futuro';
   });
+  it.forEach(function(i){if(!i.fat)return;var f=i.fat;if(f.status==='paga')i.status='pago';else if(f.status==='aberta')i.status='aberta';else if(i.status==='pago'||i.status==='antes')i.status=f.venc<h?'atrasado':(daysDiff(h,f.venc)<=3?'breve':'futuro');});
   return it.sort(function(a,b){return a.data<b.data?-1:a.data>b.data?1:0;});
 }
 
@@ -645,7 +678,7 @@ function itensDoMes(c){
 function calc(){
   var h=hoje(),c=compOf(h),contas=live('contas');
   var disp=sum(contas.filter(function(x){return x.tipo!=='cartao'&&x.titular!=='negocio';}),saldoConta);
-  var cartoes=contas.filter(function(x){return x.tipo==='cartao';}).map(function(x){return {c:x,uso:Math.max(0,-saldoConta(x))};});
+  var cartoes=contas.filter(function(x){return x.tipo==='cartao';}).map(function(x){var rc=resumoCartao(x);return {c:x,uso:rc.usoLimite,devido:rc.devido,rc:rc};});
   var itens=itensDoMes(c);
   var prevEnt=sum(itens.filter(function(i){return i.tipo==='entrada';}),function(i){return i.valor;});
   var prevSai=sum(itens.filter(function(i){return i.tipo==='saida';}),function(i){return i.valor;});
@@ -666,7 +699,7 @@ function calc(){
   var ces=chequesEspeciais();
   ces.forEach(function(ce){dividas.push({d:ce.d,inf:{restantes:null,fim:null},total:ce.valor});});
   var caras=dividas.filter(function(x){return DIVIDA_CARA.indexOf(x.d.tipo)>-1&&(x.inf.restantes==null||x.inf.restantes>0);});
-  return {h:h,c:c,disp:disp,cartoes:cartoes,fatura:sum(cartoes,function(x){return x.uso;}),itens:itens,prevEnt:prevEnt,prevSai:prevSai,sobraPrev:r2(prevEnt-prevSai),
+  return {h:h,c:c,disp:disp,cartoes:cartoes,fatura:sum(cartoes,function(x){return x.devido;}),itens:itens,prevEnt:prevEnt,prevSai:prevSai,sobraPrev:r2(prevEnt-prevSai),
     ent:ent,sai:sai,naoPlan:naoPlan,atrasados:atrasados,renda:renda,parcelas:parcelas,essencial:essencial,reserva:reserva,investido:investido,
     mesesReserva:essencial>0?r2(reserva/essencial):null,dividas:dividas,dividaTotal:sum(dividas,function(x){return x.total;}),caras:caras,ces:ces,
     temDados:live('receitas').length+live('despesas').length+live('lancamentos').length+live('dividas').length>0,
@@ -682,6 +715,8 @@ function diagnostico(){
   if(m.atrasados.length){add('crit',Math.min(20,10*m.atrasados.length),plural(m.atrasados.length,'conta passou','contas passaram')+' do vencimento ('+brl(sum(m.atrasados,function(i){return i.valor;}))+'). Pagar hoje evita multa e juros.','Abrir checklist','checklist');}
   if(m.prevEnt+m.prevSai>0&&m.sobraPrev<0){add('warn',20,'Pelo que está previsto, '+compLabel(m.c)+' fecha '+brl(-m.sobraPrev)+' no negativo. Vale olhar quais despesas dá para adiar ou reduzir.','Ver despesas','cadastro:despesas');}
   if(m.sai>m.ent&&m.sai>0&&m.ent>0){add('warn',10,'Até agora, neste mês, saiu '+brl(m.sai-m.ent)+' a mais do que entrou.','Ver lançamentos','lancamentos');}
+  m.cartoes.forEach(function(x){x.rc.parciais.forEach(function(f){add('crit',15,'Faltou pagar '+brl(f.restante)+' da fatura do '+x.c.nome+(f.venc<hoje()?' que venceu em ':' que vence em ')+dataBR(f.venc)+'. O que fica sem pagar entra no rotativo, um dos juros mais caros que existem.','Ver checklist','checklist');});
+    if(!Number(x.c.dia_vencimento))it.push({nivel:'info',pen:0,tx:'Complete o cartão '+x.c.nome+': dia de vencimento e limite. Sem isso, o Rummo não monta as faturas.',acao:'Completar',view:'cadastro:contas'});});
   var lc=Number(P.limite_cartao)||70,alto=m.cartoes.filter(function(x){return Number(x.c.limite)>0&&x.uso/Number(x.c.limite)*100>=lc;});
   if(alto.length){var x=alto[0];add('warn',10,'O cartão '+x.c.nome+' está em '+Math.round(x.uso/x.c.limite*100)+'% do limite. Segure compras não planejadas até a fatura fechar.','Ver contas','cadastro:contas');}
   if(m.mesesReserva!==null){
@@ -862,8 +897,9 @@ function contasHTML(){
   var cs=live('contas');
   if(!cs.length)return '<p class="muted small" style="margin:0">Nenhuma conta cadastrada.</p>';
   return '<div class="rows">'+cs.map(function(c){
-    var s=saldoConta(c),cart=c.tipo==='cartao',uso=Math.max(0,-s);
-    var sub=TIPO_CONTA[c.tipo]+(c.titular==='negocio'?' · negócio':'')+(cart&&Number(c.limite)>0?' · '+Math.round(uso/c.limite*100)+'% do limite':'');
+    var s=saldoConta(c),cart=c.tipo==='cartao',rc=cart?resumoCartao(c):null,uso=cart?rc.aberta.restante:0;
+    var sub=TIPO_CONTA[c.tipo]+(c.titular==='negocio'?' · negócio':'');
+    if(cart){sub='Fatura aberta · fecha '+dataBR(rc.aberta.fech);if(rc.fechadas.length)sub+=' · fechada '+brl(rc.fechadas[0].restante)+' vence '+dataBR(rc.fechadas[0].venc);if(rc.limite)sub+=' · disponível '+brl(rc.limiteDisp)+' de '+brl(rc.limite);}
     var ult=live('conferencias').filter(function(x){return x.conta_id===c.id;}).sort(function(a,b){return a.data<b.data?1:-1;})[0];
     if(!cart&&s<0)sub+=' · usando '+brl(-s)+' do cheque especial'+(Number(c.limite_cheque)>0?' de '+brl(c.limite_cheque):'');
     if(ult)sub+=' · conferido em '+dataBR(ult.data);
@@ -875,15 +911,30 @@ function carimboMini(){
   var txt=c&&!c.excluido?'<p style="margin:0 0 6px"><b>Carimbado às '+esc(c.hora)+'.</b> '+esc(c.resumo)+'.</p>':'<p style="margin:0 0 6px">Ainda sem carimbo hoje. Registre um lançamento ou confirme que revisou.</p>';
   return txt+'<p class="small muted" style="margin:0 0 10px">'+(sq?plural(sq,'dia seguido','dias seguidos')+' com registro.':'Comece hoje a sua sequência.')+'</p>'+(c&&!c.excluido?'':'<button class="btn pri sm" data-act="checkin">Revisei hoje</button>');
 }
-var STATUS={pago:['ok','Pago'],atrasado:['crit','Atrasado'],breve:['warn','Vence em breve'],futuro:['info','A vencer'],antes:['info','Antes do início']};
+var STATUS={aberta:['info','Em aberto'],pago:['ok','Pago'],atrasado:['crit','Atrasado'],breve:['warn','Vence em breve'],futuro:['info','A vencer'],antes:['info','Antes do início']};
 function itemRow(i){
   var st=STATUS[i.status],lbl=i.status==='pago'?(i.tipo==='entrada'?'Recebido':'Pago'):st[1];
-  var v=i.lanc?i.lanc.valor:i.valor;
-  var btn=i.status==='pago'?'<button class="btn ghost sm" data-act="edit-lanc|'+i.lanc.id+'">Ver</button>':'<button class="btn sm" data-act="pagar|'+i.ref+'">'+(i.tipo==='entrada'?'Recebi':'Paguei')+'</button>';
-  return '<div class="row'+(i.status==='antes'?' faded':'')+'"><div class="main"><div class="t">'+esc(i.desc)+'</div><div class="s">'+dataBR(i.lanc?i.lanc.data:i.data)+' · '+esc(i.origem)+'</div></div><span class="pill '+st[0]+'">'+lbl+'</span><div class="val '+(i.tipo==='entrada'?'pos':'')+'">'+(i.origem==='Fatura do cartão'&&!v&&!i.lanc?'a definir':brl(v))+'</div>'+btn+'</div>';
+  var v=i.fat?i.valor:(i.lanc?i.lanc.valor:i.valor);
+  var btn=i.status==='pago'?(i.lanc?'<button class="btn ghost sm" data-act="edit-lanc|'+i.lanc.id+'">Ver</button>':''):(i.status==='aberta'?'':'<button class="btn sm" data-act="pagar|'+i.ref+'">'+(i.tipo==='entrada'?'Recebi':'Paguei')+'</button>');
+  var sub=i.fat?(i.status==='aberta'?'vence '+dataBR(i.data)+' · fecha '+dataBR(i.fat.fech)+' · ainda recebendo compras':'vence '+dataBR(i.data)+(i.fat.pago>0&&i.fat.restante>0?' · pago '+brl(i.fat.pago)+' de '+brl(i.fat.total):' · fechou '+dataBR(i.fat.fech))):dataBR(i.lanc?i.lanc.data:i.data)+' · '+i.origem;
+  return '<div class="row'+(i.status==='antes'?' faded':'')+'"><div class="main"><div class="t">'+esc(i.desc)+'</div><div class="s">'+esc(sub)+'</div></div><span class="pill '+st[0]+'">'+lbl+'</span><div class="val '+(i.tipo==='entrada'?'pos':'')+'">'+brl(v)+'</div>'+btn+'</div>';
 }
 
 /* Lançamentos */
+function faixaSaldos(){
+  var cs=live('contas');if(!cs.length)return '';
+  return '<div class="saldos-faixa" aria-label="Saldo das contas">'+cs.map(function(c){
+    var s=saldoConta(c),cart=c.tipo==='cartao',rc=cart?resumoCartao(c):null,v=cart?rc.aberta.total:s;
+    return '<button class="sconta" data-act="conferir|'+c.id+'"><span class="n">'+esc(c.nome)+'</span><span class="v money '+((!cart&&s<0)?'neg':'')+'">'+brl(v)+'</span><span class="s">'+(cart?'fatura aberta · fecha '+dataBR(rc.aberta.fech)+(rc.limite?'<br>disponível '+brl(rc.limiteDisp):''):(s<0?'no negativo':'saldo hoje'))+'</span></button>';
+  }).join('')+'</div><p class="small muted" style="margin:-4px 0 12px">O saldo inicial de cada conta é o ponto de partida e não conta como entrada do mês. Toque numa conta para conferir com o banco.</p>';
+}
+function efeitoLanc(l,contaId){
+  var v=Number(l.valor)||0;if(!v||!l.data||l.data>hoje())return 0;
+  if(l.tipo==='entrada'&&l.conta_id===contaId)return v;
+  if(l.tipo==='saida'&&l.conta_id===contaId)return -v;
+  if(l.tipo==='transferencia'){var e=0;if(l.conta_id===contaId)e-=v;if(l.conta_destino_id===contaId)e+=v;return e;}
+  return 0;
+}
 function vLanc(){
   var c=UI.lcComp||compAtual(),f=UI.lcFiltro;
   var ls=lancVis().filter(function(l){return compOf(l.data)===c;});
@@ -894,6 +945,7 @@ function vLanc(){
   ls.sort(function(a,b){return a.data===b.data?((a.criado_em||'')<(b.criado_em||'')?1:-1):(a.data<b.data?1:-1);});
   var h='<div class="topbar" style="margin-top:-6px"><div class="monthnav"><button class="btn sm" data-act="lc-mes|-1" aria-label="Mês anterior">‹</button><span class="lb">'+compLabel(c)+'</span><button class="btn sm" data-act="lc-mes|1" aria-label="Próximo mês">›</button></div>'+
     '<div class="seg" role="group" aria-label="Filtrar">'+[['todos','Todos'],['entrada','Entradas'],['saida','Saídas'],['transferencia','Transferências']].map(function(o){return '<button data-act="lc-filtro|'+o[0]+'" aria-pressed="'+(f===o[0])+'">'+o[1]+'</button>';}).join('')+'</div></div>';
+  h+=faixaSaldos();
   h+='<div class="grid">'+metric('Entradas',brl(ent))+metric('Saídas',brl(sai))+metric('Resultado do mês','<span class="'+(ent-sai<0?'neg':'pos')+'">'+brl(ent-sai)+'</span>')+metric('Não planejadas',brl(np),sai?Math.round(np/sai*100)+'% das saídas':'','planejada')+'</div>';
   if(!ls.length)return h+'<div class="card"><div class="empty"><b>Nenhum lançamento aqui</b>Cada gasto do dia a dia entra por aqui: mercado, farmácia, transporte. Leva alguns segundos.<div style="margin-top:12px"><button class="btn pri" data-act="novo-lanc">Novo lançamento</button></div></div></div>';
   var dias={};ls.forEach(function(l){(dias[l.data]=dias[l.data]||[]).push(l);});
@@ -1057,6 +1109,8 @@ function modalRec(col,id){
   var sc=SCHEMA[col],r=id?JSON.parse(JSON.stringify(byId(col,id))):Object.assign({},DEFAULTS[col]||{});
   if(col==='dividas'&&!id)r.competencia_base=compAtual();
   if(ehCasal()&&!id&&!r.de_quem)r.de_quem=visao()!=='tudo'?visao():(col==='receitas'||col==='contas'?(lerEu()||'A'):'casa');
+  if(col==='contas'&&!r.data_saldo)r.data_saldo=hoje();
+  var dataAnt=r.data_saldo;
   if(col==='contas'){r.negativo=Number(r.saldo_inicial)<0&&r.tipo!=='cartao';if(r.negativo)r.saldo_inicial=Math.abs(Number(r.saldo_inicial));}
   var tipos={};sc.fields.forEach(function(f){tipos[f.k]=f.t;});
   function corpo(rr){return sc.fields.map(function(f){return fld(f.k,f.lab?f.lab(rr):f.l,f.t,rr[f.k],{opt:f.opt,ph:f.ph,help:f.help,g:f.g,hide:f.show&&!f.show(rr),full:f.t==='bool'});}).join('');}
@@ -1070,6 +1124,7 @@ function modalRec(col,id){
       limparErros(form);var v=lerForm(form,tipos),ok=true;
       sc.fields.forEach(function(f){if(f.req&&ok&&(v[f.k]===''||v[f.k]===0&&f.t==='money')){erro(form,f.k,'Preencha este campo.');ok=false;}});
       if(!ok)return false;
+      if(col==='contas'&&v.tipo==='cartao'&&!(v.dia_vencimento>0)){erro(form,'dia_vencimento','Informe o dia de vencimento da fatura.');return false;}
       ['dia','dia_vencimento','dia_fechamento'].forEach(function(k){if(v[k]!==''&&v[k]!==undefined&&(v[k]<1||v[k]>31)){erro(form,k,'Use um dia entre 1 e 31.');ok=false;}});
       if(!ok)return false;
       if(col==='dividas'){
@@ -1085,7 +1140,7 @@ function modalRec(col,id){
       }
       if(col==='contas'){var neg=v.tipo!=='cartao'&&(v.negativo||Number(v.saldo_inicial)<0);v.saldo_inicial=v.saldo_inicial===''?'':(neg?-Math.abs(Number(v.saldo_inicial)):Math.abs(Number(v.saldo_inicial)));if(v.tipo!=='corrente'){v.limite_cheque='';v.juros_cheque='';}}
       var rec=Object.assign(r,v);delete rec.negativo;
-      if(col==='contas'&&(!id||Number(v.saldo_inicial)!==anterior)){rec.data_saldo=hoje();rec.saldo_definido_em=nowIso();}
+      if(col==='contas'&&(!id||Number(v.saldo_inicial)!==anterior||v.data_saldo!==dataAnt)){rec.data_saldo=v.data_saldo&&v.data_saldo<=hoje()?v.data_saldo:hoje();rec.saldo_definido_em=nowIso();}
       if(col==='investimentos'&&!rec.atualizado_comp)rec.atualizado_comp='';
       salvarRec(col,rec);fecharModal();commit((id?'Alterações salvas':sc.sing.charAt(0).toUpperCase()+sc.sing.slice(1)+' adicionada'));
     },
@@ -1105,10 +1160,10 @@ function modalLanc(pre,editId){
     fld('descricao','Descrição','text',r.descricao,{ph:'Mercado, farmácia, Uber',full:1})+
     fld('categoria','Categoria','select',r.categoria,{opt:catOpts(r.tipo),hide:r.tipo==='transferencia'})+
     fld('conta_id','Conta','select',r.conta_id,{opt:optsContas(false).concat(r.tipo==='transferencia'?[['','Escolha a conta']]:[])})+
-    fld('conta_destino_id','Para a conta','select',r.conta_destino_id,{opt:optsContas(false),hide:r.tipo!=='transferencia'})+
+    fld('conta_destino_id','Para a conta','select',r.conta_destino_id,{opt:optsContas(false),hide:r.tipo!=='transferencia'})+'<div class="full" id="prevSaldo"></div>'+
     (ex?'':fld('parcelas','Em quantas vezes','int',r.parcelas||1,{hide:true,help:'As parcelas futuras aparecem nos meses seguintes.'}))+
     fld('planejada','Era um gasto planejado','bool',r.planejada,{g:'planejada',hide:r.tipo!=='saida'||!!r.previsto_ref});
-  var intro=r.previsto_ref?'Item do checklist: '+esc(r.descricao||'')+'. Ajuste o valor se foi diferente do previsto.':(ex&&ex.grupo_parcela?'Esta é uma parcela de uma compra parcelada. A alteração vale só para ela.':'');
+  var intro=r.previsto_ref&&r.previsto_ref.indexOf('F:')===0?'Pague o valor total da fatura. Pagar menos faz o restante entrar no rotativo, com juros muito altos.':r.previsto_ref?'Item do checklist: '+esc(r.descricao||'')+'. Ajuste o valor se foi diferente do previsto.':(ex&&ex.grupo_parcela?'Esta é uma parcela de uma compra parcelada. A alteração vale só para ela.':'');
   abrirModal({titulo:ex?'Editar lançamento':(r.previsto_ref?(r.tipo==='entrada'?'Registrar recebimento':'Registrar pagamento'):'Novo lançamento'),intro:intro,corpo:corpo,
     onChange:function(form){
       var t=form.querySelector('[name=tipo]').value,cid=form.querySelector('[name=conta_id]').value,ct=byId('contas',cid);
@@ -1117,6 +1172,25 @@ function modalLanc(pre,editId){
       form.querySelector('[data-k=conta_id] label').firstChild.textContent=t==='transferencia'?'Da conta':'Conta';
       var pl=form.querySelector('[data-k=planejada]');if(pl)pl.hidden=t!=='saida'||!!r.previsto_ref;
       var pc=form.querySelector('[data-k=parcelas]');if(pc)pc.hidden=!(t==='saida'&&ct&&ct.tipo==='cartao'&&!r.previsto_ref);
+      var box=form.querySelector('#prevSaldo');
+      if(box){
+        var vv=parseMoney(form.querySelector('[name=valor]').value),dt=form.querySelector('[name=data]').value||hoje(),dst=form.querySelector('[name=conta_destino_id]').value;
+        var novo={tipo:t,valor:vv,data:dt,conta_id:cid,conta_destino_id:t==='transferencia'?dst:''};
+        var linhas=[cid,t==='transferencia'?dst:''].filter(function(x,i,a){return x&&a.indexOf(x)===i;}).map(function(id){
+          var c=byId('contas',id);if(!c)return '';var cart=c.tipo==='cartao',atual=saldoConta(c);
+          if(cart){var rc=resumoCartao(c),ci=cicloDe(c,dt),vv2=Number(novo.valor)||0,old=ex&&ex.conta_id===id&&ex.tipo==='saida'?Number(ex.valor)||0:0;
+            var compra=novo.tipo==='saida'&&novo.conta_id===id,pag=novo.tipo==='transferencia'&&novo.conta_destino_id===id;
+            var lin='';
+            if(compra)lin+='<li><span>'+esc(c.nome)+'</span><span>vai para a fatura que vence em <b>'+dataBR(ci.venc)+'</b> (fecha '+dataBR(ci.fech)+')</span></li>';
+            if(pag)lin+='<li><span>'+esc(c.nome)+'</span><span>pagamento de fatura</span></li>';
+            if(rc.limite){var dep=r2(rc.limiteDisp+old-(compra?vv2:0)+(pag?vv2:0));lin+='<li><span>Limite disponível</span><span class="money">'+brl(rc.limiteDisp)+' → <b class="'+(dep<0?'neg':'')+'">'+brl(dep)+'</b></span></li>';}
+            return lin;}
+          var depois=r2(atual-(ex?efeitoLanc(ex,id):0)+efeitoLanc(novo,id));
+          var f=function(x){return brl(cart?Math.max(0,-x):x);};
+          return '<li><span>'+esc(c.nome)+(cart?' (fatura)':'')+'</span><span class="money">'+f(atual)+' → <b class="'+(!cart&&depois<0?'neg':'')+'">'+f(depois)+'</b></span></li>';
+        }).join('');
+        box.innerHTML=linhas?'<ul class="facts-list prev">'+linhas+'</ul>'+(dt>hoje()?'<p class="small muted" style="margin:4px 0 0">Data futura: o saldo só muda nesse dia.</p>':''):'';
+      }
     },
     onSalvar:function(form){
       limparErros(form);var v=lerForm(form,tipos);
@@ -1157,9 +1231,9 @@ function modalPagar(ref){
 }
 
 function modalConferir(id){
-  var c=byId('contas',id),calcS=saldoConta(c),cart=c.tipo==='cartao',mostrado=cart?Math.max(0,-calcS):calcS;
-  abrirModal({titulo:'Conferir '+c.nome,intro:(cart?'Fatura':'Saldo')+' calculado pelo Rummo: <b>'+brl(mostrado)+'</b>. Digite o valor que o '+(cart?'aplicativo do cartão':'banco')+' mostra agora.',
-    corpo:fld('saldo_real',cart?'Fatura atual no aplicativo':'Saldo no banco','money','',{big:1,full:1})+(cart?'':fld('negativo','A conta está no negativo','bool',false,{full:1}))+'<div class="full" id="difBox"></div>'+(cart?fld('ajustar','Lançar a diferença como ajuste','bool',true,{full:1,help:'Recomendado. Se o aplicativo mostra fatura maior, a diferença quase sempre é uma compra esquecida.'}):''),
+  var c=byId('contas',id),calcS=saldoConta(c),cart=c.tipo==='cartao',mostrado=cart?resumoCartao(c).aberta.total:calcS;
+  abrirModal({titulo:'Conferir '+c.nome,intro:(cart?'Fatura aberta':'Saldo')+' calculado pelo Rummo: <b>'+brl(mostrado)+'</b>. Digite o valor que o '+(cart?'aplicativo do cartão':'banco')+' mostra agora.',
+    corpo:fld('saldo_real',cart?'Fatura aberta no aplicativo do cartão':'Saldo no banco','money','',{big:1,full:1})+(cart?'':fld('negativo','A conta está no negativo','bool',false,{full:1}))+'<div class="full" id="difBox"></div>'+(cart?fld('ajustar','Lançar a diferença como ajuste','bool',true,{full:1,help:'Recomendado. Se o aplicativo mostra fatura maior, a diferença quase sempre é uma compra esquecida.'}):''),
     onChange:function(form){
       var raw=form.querySelector('[name=saldo_real]').value,v=parseMoney(raw),box=form.querySelector('#difBox'),ngc=form.querySelector('[name=negativo]');if(!cart&&((ngc&&ngc.checked)||v<0))v=-Math.abs(v);
       if(!raw.trim()){box.innerHTML='';return;}
@@ -1265,7 +1339,7 @@ function mesclar(inc){
   var base=[S.meta.ultima_exportacao,S.meta.ultima_importacao].filter(Boolean).sort().pop()||'';
   var res={novos:0,atualizados:0,iguais:0,conflitos:[]};
   COLS.forEach(function(c){
-    inc[c].forEach(function(imp){
+    (inc[c]||[]).forEach(function(imp){
       if(!imp.id){imp.id=uid('XL');imp.criado_em=imp.atualizado_em=nowIso();imp.excluido=false;S[c].push(imp);res.novos++;return;}
       if(!imp.atualizado_em)imp.atualizado_em=nowIso();
       var i=S[c].findIndex(function(r){return r.id===imp.id;});
@@ -1923,7 +1997,7 @@ function retratoAtual(){
   try{
     var dg=diagnostico(),m=dg.m;
     var ativos=r2(sum(liveAll('contas').filter(function(c){return c.tipo!=='cartao';}),function(c){return Math.max(0,saldoConta(c));})+sum(liveAll('investimentos'),function(i){return i.saldo;}));
-    var passivos=r2(m.fatura+m.dividaTotal);
+    var passivos=r2(sum(m.cartoes,function(x){return x.uso;})+m.dividaTotal);
     return {comp:m.c,divida_total:r2(m.dividaTotal),reserva:r2(m.reserva),ativos:ativos,patrimonio:r2(ativos-passivos),nota:m.temDados?dg.nota:'',
       entradas:m.ent,saidas:m.sai,nao_planejado:m.naoPlan,atualizado:hoje()};
   } finally {UI.visao=vs;}
@@ -2040,6 +2114,74 @@ function cardLembretes(){
     '</form><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn pri" data-act="gerar-lembretes">Gerar lembretes</button></div>'+
     (S.meta.lembretes_em?'<p class="small muted" style="margin:8px 0 0">Gerados em '+new Date(S.meta.lembretes_em).toLocaleDateString('pt-BR')+'. Mudou contas fixas ou dívidas? Gere de novo e apague os antigos da agenda.</p>':'')+
     '<details class="dir" style="margin-top:8px"><summary>Como adicionar à agenda</summary><p class="small"><b>iPhone:</b> salve o arquivo em Arquivos, toque nele e escolha "Adicionar tudo". Dica: crie antes uma agenda chamada Rummo, para apagar e trocar os lembretes com facilidade.<br><b>Android:</b> abra o arquivo com o app de agenda do celular. Se o Google Agenda não abrir direto, importe pelo computador em calendar.google.com › Configurações › Importar.<br><b>Computador:</b> dê dois cliques no arquivo ou importe na sua agenda.</p></details></div>';
+}
+
+/* =====================================================================
+   CARTÃO DE CRÉDITO · ciclo de faturas
+   Compra → fatura aberta → fecha (padrão: 5 dias antes do vencimento)
+   → vira conta a pagar no vencimento → pagamento libera o limite
+   ===================================================================== */
+function diasCartao(c){
+  var V=Math.min(31,Math.max(1,Number(c.dia_vencimento)||10)),F=Number(c.dia_fechamento);
+  if(!(F>=1&&F<=31)){F=V-5;if(F<1)F+=30;}
+  return {F:F,V:V,padrao:!(Number(c.dia_fechamento)>=1)};
+}
+function cicloDe(c,d){
+  var k=diasCartao(c),fech=dateInComp(compOf(d),k.F);
+  if(d>=fech)fech=dateInComp(addMonths(compOf(d),1),k.F);
+  var venc=dateInComp(compOf(fech),k.V);
+  if(venc<=fech)venc=dateInComp(addMonths(compOf(fech),1),k.V);
+  return {id:compOf(venc),fech:fech,venc:venc};
+}
+function faturasCartao(c){
+  var map={},h=hoje(),d0=c.data_saldo||h,def=c.saldo_definido_em||'';
+  function fat(ci){return map[ci.id]||(map[ci.id]={id:ci.id,fech:ci.fech,venc:ci.venc,total:0,compras:0,pago:0});}
+  var ab0=cicloDe(c,d0);
+  if(Number(c.saldo_inicial))fat(ab0).total+=Math.abs(Number(c.saldo_inicial));
+  if(Number(c.fatura_fechada)>0){
+    var ultFech=dateInComp(addMonths(compOf(ab0.fech),-1),diasCartao(c).F),ant=cicloDe(c,addDays(ultFech,-1));
+    if(ant.venc>=d0)fat(ant).total+=Number(c.fatura_fechada);
+  }
+  var pagamentos=[];
+  liveAll('lancamentos').forEach(function(l){
+    if(l.data<d0)return;
+    if(l.data===d0&&def&&(l.criado_em||'')<def)return;
+    var v=Number(l.valor)||0;if(!v)return;
+    if(l.tipo==='saida'&&l.conta_id===c.id){var x=fat(cicloDe(c,l.data));x.total+=v;x.compras++;}
+    else if(l.tipo==='entrada'&&l.conta_id===c.id){fat(cicloDe(c,l.data)).total-=v;}
+    else if(l.tipo==='transferencia'&&l.conta_destino_id===c.id&&l.data<=h)pagamentos.push(l);
+    else if(l.tipo==='transferencia'&&l.conta_id===c.id){var y=fat(cicloDe(c,l.data));y.total+=v;}
+  });
+  var lista=Object.keys(map).map(function(k){var f=map[k];f.total=r2(f.total);return f;}).sort(function(a,b){return a.venc<b.venc?-1:1;});
+  var semRef=[];
+  pagamentos.forEach(function(l){
+    var pre='F:'+c.id+':';
+    if(l.previsto_ref&&l.previsto_ref.indexOf(pre)===0){var alvo=map[l.previsto_ref.slice(pre.length)];if(alvo){alvo.pago=r2(alvo.pago+Number(l.valor));return;}}
+    semRef.push(l);
+  });
+  semRef.sort(function(a,b){return a.data<b.data?-1:1;}).forEach(function(l){
+    var v=Number(l.valor)||0;
+    lista.forEach(function(f){if(v<=0)return;var falta=r2(f.total-f.pago);if(falta<=0)return;var p=Math.min(falta,v);f.pago=r2(f.pago+p);v=r2(v-p);});
+  });
+  lista.forEach(function(f){
+    f.restante=r2(Math.max(0,f.total-f.pago));
+    if(f.total<=0)f.status='zerada';
+    else if(f.restante<=0.009)f.status='paga';
+    else if(h<f.fech)f.status='aberta';
+    else if(h>f.venc)f.status='vencida';
+    else f.status='fechada';
+  });
+  return lista;
+}
+function resumoCartao(c){
+  var fs=faturasCartao(c),h=hoje(),ab=cicloDe(c,h);
+  var aberta=fs.find(function(f){return f.id===ab.id;})||{id:ab.id,fech:ab.fech,venc:ab.venc,total:0,restante:0,status:'aberta',pago:0};
+  var fechadas=fs.filter(function(f){return (f.status==='fechada'||f.status==='vencida')&&f.restante>0;});
+  var usoLimite=r2(sum(fs,function(f){return f.restante;}));
+  var devido=r2(sum(fechadas,function(f){return f.restante;})+(aberta.status==='paga'?0:aberta.restante));
+  var parciais=fs.filter(function(f){return f.pago>0&&f.restante>0.009&&(f.status==='fechada'||f.status==='vencida');});
+  var lim=Number(c.limite)||0;
+  return {faturas:fs,aberta:aberta,fechadas:fechadas,usoLimite:usoLimite,devido:devido,parciais:parciais,limite:lim,limiteDisp:lim?r2(lim-usoLimite):null,dias:diasCartao(c)};
 }
 
 /* ---------- ações ---------- */
