@@ -350,6 +350,8 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
 <script>
 (function(){
 'use strict';
+var VERSAO_ID='2026.10.07-4';
+var VERSAO_APP='07/10/2026 · aviso de atualização';
 var APP='rumo', VERSAO=5, LS='rumo_dados_v1', LS_TEMA='rumo_tema';
 
 
@@ -801,7 +803,7 @@ function dicaInstalar(){
   return '<div class="alert warn"><span class="bar"></span><span class="tx"><b>Instale o Rummo no iPhone para seus dados ficarem guardados.</b> Toque em Compartilhar (quadrado com a seta) e depois em "Adicionar à Tela de Início". Use sempre pelo ícone: o Safari e o app instalado guardam dados separados.</span><button class="btn sm" data-act="dica-ios">Entendi</button></div>';
 }
 function banners(){
-  var out=dicaInstalar()+cardSaldos();
+  var out=(UI.novaVersao?'<div class="alert info"><span class="bar"></span><span class="tx"><b>Nova versão do Rummo disponível.</b> '+esc(UI.novaVersao.novidades||'')+' Seus dados continuam salvos.</span><button class="btn sm pri" data-act="atualizar-app">Atualizar agora</button></div>':'')+dicaInstalar()+cardSaldos();
   if(S.meta.onboarding_ok&&!S.meta.lembretes_em&&!S.meta.lembretes_dispensado&&UI.view==='painel')out+='<div class="banner"><span class="tx"><b>Quer ajuda para não esquecer?</b> O Rummo coloca na agenda do seu celular um lembrete diário e os vencimentos das contas.</span><button class="btn sm pri" data-act="go|dados">Configurar lembretes</button><button class="btn sm ghost" data-act="lemb-pular">Agora não</button></div>';
   if(!storageOk)out+='<div class="alert crit"><span class="bar"></span><span class="tx">Este navegador não está guardando os dados automaticamente. Exporte o Excel antes de fechar.</span><button class="btn sm" data-act="exportar">Exportar</button></div>';
   var semReg=diasSemRegistro().slice(-7);
@@ -1035,7 +1037,7 @@ function vDados(){
     '<p class="small muted" style="margin-top:0">O Excel exportado é a sua cópia completa. Para continuar em outro aparelho, importe o arquivo lá. O Rummo junta as informações sem apagar o que já existe.</p>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri" data-act="exportar">Exportar Excel</button><button class="btn pri" data-act="importar">Importar Excel</button>'+(podeCompartilhar()?'<button class="btn" data-act="compartilhar">Compartilhar arquivo</button>':'')+'</div>'+'<ol class="passos small"><li><b>Exportar</b> salva uma cópia de tudo num arquivo Excel. Faça isso ao terminar de usar.</li><li><b>Importar</b> abre esse arquivo para continuar de onde parou, neste ou em outro aparelho.</li><li>Ao importar, escolha o arquivo mais recente que começa com <b>'+(ehCasal()?'rummo_casal_':'rummo_financas_')+'</b>. Nada do que já está aqui é apagado.</li></ol>'+
     '<p class="small muted" style="margin-bottom:0">'+plural(cont,'registro','registros')+' neste aparelho. '+(S.meta.ultima_exportacao?'Última exportação: '+new Date(S.meta.ultima_exportacao).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})+'.':'Ainda não exportado.')+'</p></div>'+
-    '<div class="card"><h2>Privacidade</h2><p class="small" style="margin-top:0">Seus dados ficam só neste aparelho e nos arquivos que você exportar. O Rummo não envia nada para a internet. Quando aberto por um endereço da web, só o código do aplicativo vem de lá; seus dados nunca saem do aparelho.</p><p class="small muted" style="margin-bottom:0">O Rummo é uma ferramenta educativa de organização financeira. Ele não substitui a orientação de um profissional.</p></div></div>';
+    '<div class="card"><h2>Privacidade</h2><p class="small" style="margin-top:0">Seus dados ficam só neste aparelho e nos arquivos que você exportar. O Rummo não envia nada para a internet. Quando aberto por um endereço da web, só o código do aplicativo vem de lá; seus dados nunca saem do aparelho.</p><p class="small muted" style="margin-bottom:0">O Rummo é uma ferramenta educativa de organização financeira. Ele não substitui a orientação de um profissional.</p><p class="small muted" style="margin:8px 0 0">Versão do app: <b>'+VERSAO_APP+'</b></p></div></div>';
   h+=cardLembretes();
   h+='<div class="card"><h2>Suas preferências</h2><form class="form" id="formPrem">'+
     (ehCasal()?fld('casal_nome_a','Nome da pessoa 1','text',P.casal_nome_a)+fld('casal_nome_b','Nome da pessoa 2','text',P.casal_nome_b)+fld('eu','Quem é você neste aparelho','select',lerEu()||'A',{opt:[['A',donoNome('A')],['B',donoNome('B')]],help:'Fica guardado só neste aparelho.'})+fld('casal_divisao','Divisão das contas da casa','select',P.casal_divisao||'proporcional',{opt:[['proporcional','Proporcional à renda'],['meio','Meio a meio'],['junto','Tudo junto']],g:'divisao'})+fld('casal_dia','Dia da contribuição','int',P.casal_dia):fld('nome','Como quer ser chamado','text',P.nome,{ph:'Seu nome'}))+
@@ -1056,7 +1058,7 @@ function vDados(){
 function vMais(){
   return '<div class="rows" style="margin-bottom:12px"><div class="row click" data-act="exportar"><div class="main"><div class="t">Exportar Excel</div><div class="s">Salvar uma cópia de tudo</div></div><span class="muted">›</span></div><div class="row click" data-act="importar"><div class="main"><div class="t">Importar Excel</div><div class="s">Abrir a última planilha e continuar de onde parou</div></div><span class="muted">›</span></div></div><div class="rows" style="margin-bottom:12px"><div class="row click" data-act="espacos"><div class="main"><div class="t">'+nomeEspaco()+'</div><div class="s">Trocar entre Meu Rummo e Rummo do casal</div></div><span class="muted">›</span></div></div><div class="rows">'+[['conselho','Conselho do mês','O que fazer este mês e o destino de cada real'],['dividas','Dívidas e nome limpo','Estratégia de pagamento e trilha para limpar o nome'],['diagnostico','Último diagnóstico','Carimbo do dia, sequência e histórico'],['cadastro','Cadastro','Contas, receitas, despesas, dívidas, investimentos e metas'],['dados','Dados e ajustes','Exportar, importar, preferências e privacidade']].map(function(o){
     return '<div class="row click" data-act="nav|'+o[0]+'"><div class="main"><div class="t">'+o[1]+'</div><div class="s">'+o[2]+'</div></div><span class="muted">›</span></div>';
-  }).join('')+'</div>';
+  }).join('')+'</div><p class="small muted" style="margin:14px 2px 0">Versão do app: <b>'+VERSAO_APP+'</b></p>';
 }
 
 /* ---------- formulários ---------- */
@@ -2198,6 +2200,7 @@ var ACT={
   semmov:function(d){var id='C-'+d;S.carimbos=S.carimbos.filter(function(x){return x.id!==id;});S.carimbos.push({id:id,data:d,hora:'',sem_movimento:true,revisado:true,resumo:'Confirmado: sem movimento',registrado_em:hoje(),criado_em:nowIso(),atualizado_em:nowIso(),excluido:false});commit('Dia '+dataBR(d)+' confirmado sem movimento');},
   'lancar-dia':function(d){modalLanc({data:d});},
   checkin:function(){commit('Carimbo de hoje registrado');},
+  'atualizar-app':function(){toast('Atualizando…');atualizarApp();},
   'gerar-lembretes':function(){var f=$('#formLemb');if(f){var v=lerForm(f,{lembrete_hora:'text'});if(v.lembrete_hora&&!/^\d{1,2}:\d{2}$/.test(v.lembrete_hora)){erro(f,'lembrete_hora','Use o formato 20:00.');return;}if(v.lembrete_hora&&v.lembrete_hora.length===4)v.lembrete_hora='0'+v.lembrete_hora;Object.assign(S.premissas,v,{atualizado_em:nowIso()});persistir();}baixarLembretes();},
   'lemb-pular':function(){S.meta.lembretes_dispensado=true;persistir();render();},
   espacos:function(){modalEspacos();},
@@ -2285,8 +2288,24 @@ render();
 if(!S.meta.onboarding_ok){if(ehCasal())renderOnbCasal();else renderOnb();}
 else if(ehCasal()&&!lerEu())modalEu();
 if(S.meta.onboarding_ok){atualizarRetrato();persistir();}
-if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(function(){});}
-window.__rumo={S:function(){return S;},mesclar:mesclar,montarWB:montarWB,normalizar:normalizar,diagnostico:diagnostico,itensDoMes:itensDoMes,saldoConta:saldoConta,commit:commit,salvarRec:salvarRec,ACT:ACT,lerArquivo:lerArquivo};
+var HOSPEDADO=location.protocol==='https:'||location.hostname==='localhost';
+if('serviceWorker' in navigator&&HOSPEDADO){navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(reg){reg.update();}).catch(function(){});}
+function verificarAtualizacao(){
+  if(!HOSPEDADO||!window.fetch)return;
+  fetch('versao.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+    if(j&&j.versao&&j.versao!==VERSAO_ID&&(!UI.novaVersao||UI.novaVersao.versao!==j.versao)){UI.novaVersao=j;render();}
+  }).catch(function(){});
+}
+function atualizarApp(){
+  persistir();
+  var fim=function(){location.replace(location.pathname+'?v='+encodeURIComponent((UI.novaVersao&&UI.novaVersao.versao)||Date.now()));};
+  var limpar=function(){return window.caches?caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k);}));}):Promise.resolve();};
+  var sw=('serviceWorker' in navigator)?navigator.serviceWorker.getRegistration().then(function(reg){return reg?reg.update():null;}).catch(function(){}):Promise.resolve();
+  sw.then(limpar).then(fim,fim);
+}
+verificarAtualizacao();
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')verificarAtualizacao();});
+window.__rumo={verificarAtualizacao:verificarAtualizacao,S:function(){return S;},mesclar:mesclar,montarWB:montarWB,normalizar:normalizar,diagnostico:diagnostico,itensDoMes:itensDoMes,saldoConta:saldoConta,commit:commit,salvarRec:salvarRec,ACT:ACT,lerArquivo:lerArquivo};
 })();
 
 
