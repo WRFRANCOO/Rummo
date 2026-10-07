@@ -308,6 +308,12 @@ main{min-width:0}
   .metric .v{font-size:1.1rem}
   .seg button{padding:6px 10px}
 }
+
+/* Versão do app */
+.versao-lat{font-size:.8rem;color:var(--muted);margin-bottom:10px}
+.lnk{border:0;background:none;padding:0;color:var(--action);font:inherit;font-weight:600;text-decoration:underline;cursor:pointer}
+.rodape-versao{display:none;text-align:center;font-size:.78rem;color:var(--muted);margin-top:22px;padding-top:12px;border-top:1px solid var(--line)}
+@media (max-width:860px){.rodape-versao{display:block}}
 </style>
 </head>
 <body>
@@ -350,8 +356,8 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
 <script>
 (function(){
 'use strict';
-var VERSAO_ID='2026.10.07-5';
-var VERSAO_APP='07/10/2026 · status da versão';
+var VERSAO_ID='2026.10.07-6';
+var VERSAO_APP=VERSAO_ID;
 var APP='rumo', VERSAO=5, LS='rumo_dados_v1', LS_TEMA='rumo_tema';
 
 
@@ -788,9 +794,10 @@ function render(){
     if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
   });
   var f={conselho:vConselho,dividas:vDividas,painel:vPainel,lancamentos:vLanc,checklist:vCheck,diagnostico:vDiag,cadastro:vCad,dados:vDados,mais:vMais}[UI.view]||vPainel;
-  $('#main').innerHTML=topbar()+(ehCasal()&&['painel','lancamentos','checklist','conselho','dividas','cadastro'].indexOf(UI.view)>-1?'<div class="visbar">'+seletorVisao()+'</div>':'')+banners()+f();
+  $('#main').innerHTML=(UI.view==='mais'||UI.view==='dados')?'':'<div class="rodape-versao">Rummo · '+linhaVersao()+'</div>';
+  $('#main').insertAdjacentHTML('afterbegin',topbar()+(ehCasal()&&['painel','lancamentos','checklist','conselho','dividas','cadastro'].indexOf(UI.view)>-1?'<div class="visbar">'+seletorVisao()+'</div>':'')+banners()+f());
   var sf=$('#sideFoot');
-  if(sf)sf.innerHTML='<div style="display:flex;gap:6px;margin-bottom:8px"><button class="btn sm" data-act="exportar">Exportar</button><button class="btn sm" data-act="importar">Importar</button></div>'+(S.meta.ultima_exportacao?'Última exportação<br>'+new Date(S.meta.ultima_exportacao).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}):'Nenhuma exportação ainda');
+  if(sf)sf.innerHTML='<div class="versao-lat">'+linhaVersao()+'</div><div style="display:flex;gap:6px;margin-bottom:8px"><button class="btn sm" data-act="exportar">Exportar</button><button class="btn sm" data-act="importar">Importar</button></div>'+(S.meta.ultima_exportacao?'Última exportação<br>'+new Date(S.meta.ultima_exportacao).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}):'Nenhuma exportação ainda');
 }
 function topbar(){
   var sub=dataLonga(hoje());
@@ -2300,6 +2307,10 @@ function verificarAtualizacao(manual){
     else{UI.novaVersao=null;UI.versaoStatus=j?'ok':'erro';}
     render();if(manual&&UI.versaoStatus==='ok')toast('Seu Rummo está atualizado.');
   }).catch(function(){UI.versaoStatus='offline';render();});
+}
+function linhaVersao(){
+  var st=UI.versaoStatus;
+  return 'Versão '+VERSAO_ID+(st==='ok'?' · <span class="pos">✓ atualizado</span>':(st==='nova'?' · <button class="lnk" data-act="atualizar-app">atualizar</button>':''));
 }
 function statusVersao(){
   var st=UI.versaoStatus,b='<b>'+VERSAO_APP+'</b>',btn='<button class="btn sm" data-act="verificar-versao">Verificar agora</button>';
